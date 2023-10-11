@@ -12,6 +12,22 @@ const snakeCaseToCameCaseForSpecificMovie = (dbObject) => {
   };
 };
 
+const snakeCaseToCamelCaseForMovie = (dbObject) => {
+  return {
+    movieId: dbObject.movie_id,
+    directorId: dbObject.director_id,
+    movieName: dbObject.movie_name,
+    leadActor: dbObject.lead_actor,
+  };
+};
+
+const snakeCaseToCamelCaseForDirector = (dbObject) => {
+  return {
+    directorId: dbObject.director_id,
+    directorName: dbObject.director_name,
+  };
+};
+
 const dbPath = path.join(__dirname, "moviesData.db");
 
 let db = null;
@@ -42,10 +58,9 @@ app.get("/movies/", async (request, response) => {
             movie_id;
     `;
   const moviesArray = await db.all(getMoviesQuery);
+
   response.send(
-    moviesArray.map((eachMovie) =>
-      snakeCaseToCameCaseForSpecificMovie(eachMovie)
-    )
+    moviesArray.map((eachMovie) => ({ movieName: eachMovie.movie_name }))
   );
 });
 
@@ -73,7 +88,8 @@ app.get("/movies/:movieId/", async (request, response) => {
             movie_id = ${movieId};
     `;
   const movieArray = await db.get(getMovieQuery);
-  response.send(movieArray);
+  const movieResult = snakeCaseToCamelCaseForMovie(movieArray);
+  response.send(movieResult);
 });
 
 app.put("/movies/:movieId", async (request, response) => {
@@ -115,7 +131,10 @@ app.get("/directors/", async (request, response) => {
             director;
     `;
   const directorsArray = await db.all(getDirectorsQuery);
-  response.send(directorsArray);
+  const directorsResult = directorsArray.map((eachDirector) =>
+    snakeCaseToCamelCaseForDirector(eachDirector)
+  );
+  response.send(directorsResult);
 });
 
 app.get("/directors/:directorId/movies/", async (request, response) => {
@@ -130,7 +149,9 @@ app.get("/directors/:directorId/movies/", async (request, response) => {
             movie.director_id = ${directorId};
     `;
   const moviesArray = await db.all(getMoviesQuery);
-  response.send(moviesArray);
+  response.send(
+    moviesArray.map((eachObject) => ({ movieName: eachObject.movie_name }))
+  );
 });
 
 module.exports = app;
